@@ -4,7 +4,7 @@
 
 Em arquiteturas de microsserviços, não é possível utilizar transações ACID tradicionais para garantir consistência entre múltiplos sistemas. Cada serviço possui sua própria base de dados, sua própria transação local e seu próprio ciclo de vida.
 
-O **SagaFlow** é um laboratório prático que demonstra como lidar com esse desafio utilizando o **Saga Pattern (Orquestrado)**, combinando comunicação síncrona, mensageria e compensações lógicas para garantir **consistência eventual** e **resiliência a falhas**.
+O SagaFlow é um laboratório prático que demonstra como lidar com esse desafio utilizando o Saga Pattern (Orquestrado), combinando comunicação síncrona, mensageria e compensações lógicas para garantir consistência eventual e resiliência a falhas.
 
 O projeto simula um fluxo real de negócio envolvendo:
 
@@ -12,51 +12,51 @@ O projeto simula um fluxo real de negócio envolvendo:
 - Processamento de pagamento
 - Reserva de estoque
 
-Cada etapa é executada como uma **transação local independente**, coordenada por um **serviço orquestrador**, que controla o estado da saga e dispara ações ou compensações conforme o resultado de cada passo.
+Cada etapa é executada como uma transação local independente, coordenada por um serviço orquestrador, que controla o estado da saga e dispara ações ou compensações conforme o resultado de cada passo.
 
 ## Funcionamento da Saga (Visão Técnica)
 
-O SagaFlow utiliza o **Saga Pattern Orquestrado**, onde um serviço central controla o fluxo da transação distribuída.
+O SagaFlow utiliza o Saga Pattern Orquestrado, onde um serviço central controla o fluxo da transação distribuída.
 
 ### Serviços envolvidos
 
-- **Order Service**
+- `Order Service`
   Responsável por criar e gerenciar pedidos.
 
-- **Payment Service**
+- `Payment Service`
   Simula o processamento de pagamentos.
 
-- **Inventory Service**
+- `Inventory Service`
   Responsável por reservar e liberar estoque.
 
-- **Orchestrator Service**
+- `Orchestrator Service`
   Coordena o fluxo da saga, mantendo o estado da transação distribuída.
 
 ### Fluxo simplificado da Saga
 
-1. **Cliente cria um pedido**
+1. Cliente cria um pedido
 
    - Requisição REST para o `Order Service`
    - Pedido é criado com status `CREATED`
 
-2. **Orchestrator inicia a saga**
+2. Orchestrator inicia a saga
 
    - Recebe o evento de pedido criado
    - Inicia o fluxo da saga
 
-3. **Processamento de pagamento**
+3. Processamento de pagamento
 
    - Orchestrator envia comando para o `Payment Service`
    - Em caso de sucesso → segue o fluxo
    - Em caso de falha → inicia compensação
 
-4. **Reserva de estoque**
+4. Reserva de estoque
 
    - Orchestrator solicita reserva ao `Inventory Service`
    - Em caso de sucesso → saga finalizada com sucesso
    - Em caso de falha → compensação de pagamento
 
-5. **Finalização**
+5. Finalização
 
    - Pedido é marcado como `COMPLETED` ou `CANCELLED`
    - Consistência eventual garantida
@@ -66,11 +66,11 @@ O SagaFlow utiliza o **Saga Pattern Orquestrado**, onde um serviço central cont
 Caso qualquer etapa falhe:
 
 - Pagamento aprovado → estoque falhou
-  → **Pagamento é compensado**
+  → Pagamento é compensado
 - Pedido criado → pagamento falhou
-  → **Pedido é cancelado**
+  → Pedido é cancelado
 
-Cada compensação é uma **ação explícita**, não um rollback automático de banco de dados.
+Cada compensação é uma ação explícita, não um rollback automático de banco de dados.
 
 ## Stack
 
@@ -115,7 +115,7 @@ sagaflow/
 └── README.md
 ```
 
-Cada diretório representa um **microsserviço Spring Boot independente**, com:
+Cada diretório representa um microsserviço Spring Boot independente, com:
 
 - `Dockerfile`
 - Banco de dados próprio
