@@ -12,6 +12,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "sagaflow", "-d", "sagaflow"]
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   order-service:
     build: ./order-service
@@ -46,6 +52,14 @@ services:
     command:
       - "--defaultsFile=/liquibase/liquibase.properties"
       - update
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "sagaflow", "-d", "sagaflow"]
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   postgres_data:
