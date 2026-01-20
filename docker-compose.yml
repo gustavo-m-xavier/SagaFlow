@@ -12,6 +12,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "sagaflow", "-d", "sagaflow"]
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   order-service:
     build: ./order-service
@@ -29,14 +35,6 @@ services:
     depends_on:
       - postgres
 
-  orchestrator-service:
-    build: ./orchestrator-service
-    container_name: orchestrator-service
-    ports:
-      - "8082:8082"
-    depends_on:
-      - postgres
-
   inventory-service:
     build: ./inventory-service
     container_name: inventory-service
@@ -44,6 +42,24 @@ services:
       - "8081:8081"
     depends_on:
       - postgres
+
+  liquibase:
+    image: liquibase/liquibase:4.27
+    container_name: liquibase
+    volumes:
+      - ./liquibase/liquibase.properties:/liquibase/liquibase.properties
+      - ./liquibase/changelog:/liquibase/changelog
+    command:
+      - "--defaultsFile=/liquibase/liquibase.properties"
+      - update
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "sagaflow", "-d", "sagaflow"]
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   postgres_data:
