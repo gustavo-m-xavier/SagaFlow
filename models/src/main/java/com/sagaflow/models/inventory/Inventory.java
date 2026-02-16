@@ -2,6 +2,7 @@ package com.sagaflow.models.inventory;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -22,6 +23,9 @@ public class Inventory {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "price")
+    private BigDecimal price;
+
     public UUID getProductId() {
         return productId;
     }
@@ -36,7 +40,6 @@ public class Inventory {
 
     public void setAvailableQuantity(Integer availableQuantity) {
         this.availableQuantity = availableQuantity;
-        this.updatedAt = LocalDateTime.now();
     }
 
     public String getDescription() {
@@ -53,6 +56,14 @@ public class Inventory {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal unitPrice) {
+        this.price = unitPrice;
     }
 }
 
