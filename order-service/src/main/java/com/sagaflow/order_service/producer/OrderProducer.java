@@ -1,5 +1,8 @@
 package com.sagaflow.order_service.producer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sagaflow.models.order.OrderInfoRecord;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -7,15 +10,16 @@ import org.springframework.stereotype.Service;
 public class OrderProducer {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper mapper;
 
-    public OrderProducer(KafkaTemplate<String, String> kafkaTemplate) {
+    public OrderProducer(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper mapper) {
         this.kafkaTemplate = kafkaTemplate;
+        this.mapper = mapper;
     }
 
-    public void sendOrderCreatedEvent(String orderId) {
+    public void sendOrderCreatedEvent(OrderInfoRecord orderInfoRecord) throws JsonProcessingException {
         String topic = "order-created";
-        kafkaTemplate.send(topic, orderId);
-        System.out.println("Sent order created event for order ID: " + orderId);
+        kafkaTemplate.send(topic, mapper.writeValueAsString(orderInfoRecord));
     }
 
 }
