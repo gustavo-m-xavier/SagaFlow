@@ -109,8 +109,12 @@ CREATE TABLE inventory_schema.inventory_reservations
     quantity   INT,
     status     inventory_status,
     created_at TIMESTAMP,
-    actived    BOOLEAN,
+    is_active    BOOLEAN,
     CONSTRAINT fk_inventory_res_product
         FOREIGN KEY (product_id)
             REFERENCES inventory_schema.inventory (product_id)
 );
+COMMIT;
+--changeset andre:002
+ALTER TABLE inventory_schema.inventory ADD description VARCHAR(1000);
+COMMIT;
