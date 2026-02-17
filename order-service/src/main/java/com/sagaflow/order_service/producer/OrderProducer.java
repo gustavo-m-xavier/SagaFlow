@@ -3,6 +3,7 @@ package com.sagaflow.order_service.producer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sagaflow.models.order.OrderInfoRecord;
+import com.sagaflow.models.topics.Topics;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +19,7 @@ public class OrderProducer {
     }
 
     public void sendOrderCreatedEvent(OrderInfoRecord orderInfoRecord) throws JsonProcessingException {
-        String topic = "order-created";
-        kafkaTemplate.send(topic, mapper.writeValueAsString(orderInfoRecord));
+        kafkaTemplate.send(Topics.ORDER_CREATED.getTopicName(), mapper.writeValueAsString(orderInfoRecord));
     }
 
 }

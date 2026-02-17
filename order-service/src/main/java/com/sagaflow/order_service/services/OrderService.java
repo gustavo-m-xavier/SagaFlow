@@ -25,35 +25,64 @@ public class OrderService {
     private OrderProducer orderProducer;
     private OrderRepository orderRepository;
     private OrderItemRepository orderItemRepository;
+    private OrchestratorService orchestratorService;
 
-    OrderService(OrderProducer orderProducer, OrderRepository orderRepository, OrderItemRepository orderItemRepository) {
+    OrderService(OrderProducer orderProducer, OrderRepository orderRepository, OrderItemRepository orderItemRepository, OrchestratorService orchestratorService) {
         this.orderProducer = orderProducer;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
+        this.orchestratorService = orchestratorService;
     }
 
-    @Transactional(propagation = Propagation.REQUIRED)
-    public void createOrder(OrderRequest orderRequest) throws JsonProcessingException {
-        Order order = new Order();
-        order.setStatus(OrderStatus.CREATED);
-        orderRepository.save(order);
+@Transactional(propagation = Propagation.REQUIRED)
+public void createOrder(OrderRequest orderRequest) throws JsonProcessingException {
+    Order order = createAndSaveOrder();
+    OrderItem orderItem = createAndSaveOrderItem(order.getOrderId(), orderRequest);
+    orchestratorService.saveOrchestrator(order.getOrderId());
+    publishOrderCreatedEvent(orderItem);
+}
 
-        OrderItem orderItem = new OrderItem();
-        orderItem.setOrderId(order.getOrderId());
-        orderItem.setProductId(orderRequest.productId());
-        orderItem.setQuantity(orderRequest.quantity());
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<ProductRecord> response = restTemplate.exchange("http://localhost:8081/api/inventory/" + orderRequest.productId(), HttpMethod.GET, null, ProductRecord.class);
-        ProductRecord product = response.getBody();
-        orderItem.setUnitPrice(product.price());
-        orderItemRepository.save(orderItem);
+private Order createAndSaveOrder() {
+    Order order = new Order();
+    order.setStatus(OrderStatus.CREATED);
+    orderRepository.save(order);
+    return order;
+}
 
-        orderProducer.sendOrderCreatedEvent(
-                new OrderInfoRecord(
-                        orderItem.getOrderId(), orderItem.getProductId(), orderItem.getQuantity(), orderItem.getUnitPrice()
-                )
-        );
-    }
+private OrderItem createAndSaveOrderItem(UUID orderId, OrderRequest orderRequest) {
+    OrderItem orderItem = new OrderItem();
+    orderItem.setOrderId(orderId);
+    orderItem.setProductId(orderRequest.productId());
+    orderItem.setQuantity(orderRequest.quantity());
+
+    ProductRecord product = fetchProductDetails(orderRequest.productId());
+    orderItem.setUnitPrice(product.price());
+
+    orderItemRepository.save(orderItem);
+    return orderItem;
+}
+
+private ProductRecord fetchProductDetails(UUID productId) {
+    RestTemplate restTemplate = new RestTemplate();
+    ResponseEntity<ProductRecord> response = restTemplate.exchange(
+            "http://localhost:8081/api/inventory/" + productId,
+            HttpMethod.GET,
+            null,
+            ProductRecord.class
+    );
+    return response.getBody();
+}
+
+private void publishOrderCreatedEvent(OrderItem orderItem) throws JsonProcessingException {
+    orderProducer.sendOrderCreatedEvent(
+            new OrderInfoRecord(
+                    orderItem.getOrderId(),
+                    orderItem.getProductId(),
+                    orderItem.getQuantity(),
+                    orderItem.getUnitPrice()
+            )
+    );
+}
 
     public OrderInfoRecord getOrderInfoById(String orderId) {
         OrderItem orderItem = orderItemRepository
